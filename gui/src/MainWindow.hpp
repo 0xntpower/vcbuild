@@ -1,0 +1,99 @@
+#pragma once
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#include <Windows.h>
+#include <atlbase.h>
+#include <atlapp.h>
+#include <atlwin.h>
+#include <atlmisc.h>
+#include <atlctrls.h>
+#include <atlcrack.h>
+#include <atldlgs.h>
+
+#include <string>
+#include <filesystem>
+
+#include "resource.h"
+#include "ConfigManager.hpp"
+
+namespace vcbuild::gui {
+
+class MainWindow : public CWindowImpl<MainWindow> {
+public:
+    DECLARE_WND_CLASS(L"VcBuildConfigWindow")
+
+    BEGIN_MSG_MAP(MainWindow)
+        MSG_WM_CREATE(OnCreate)
+        MSG_WM_SIZE(OnSize)
+        MSG_WM_DESTROY(OnDestroy)
+        MSG_WM_CLOSE(OnClose)
+        COMMAND_ID_HANDLER_EX(IDC_SAVE, OnSave)
+        COMMAND_ID_HANDLER_EX(IDC_RELOAD, OnReload)
+        NOTIFY_CODE_HANDLER_EX(TCN_SELCHANGE, OnTabChange)
+    END_MSG_MAP()
+
+    bool Initialize(const std::filesystem::path& configPath);
+
+private:
+    int OnCreate(LPCREATESTRUCT cs);
+    void OnSize(UINT type, CSize size);
+    void OnDestroy();
+    void OnClose();
+    void OnSave(UINT code, int id, HWND hwnd);
+    void OnReload(UINT code, int id, HWND hwnd);
+    LRESULT OnTabChange(LPNMHDR nmhdr);
+
+    void CreateControls();
+    void CreateProjectPage();
+    void CreateCompilerPage();
+    void CreateLinkerPage();
+    void CreateSourcesPage();
+    void ShowPage(int index);
+    void LoadConfigToUI();
+    void SaveUIToConfig();
+
+    ConfigManager config_;
+    std::filesystem::path configPath_;
+    
+    CTabCtrl tabCtrl_;
+    CButton saveBtn_;
+    CButton reloadBtn_;
+    
+    std::vector<HWND> projectCtrls_;
+    std::vector<HWND> compilerCtrls_;
+    std::vector<HWND> linkerCtrls_;
+    std::vector<HWND> sourcesCtrls_;
+    
+    CComboBox projectType_;
+    CComboBox projectArch_;
+    CComboBox compilerStd_;
+    CComboBox compilerRuntime_;
+    CComboBox linkerSubsystem_;
+    CEdit projectName_;
+    CEdit projectOutDir_;
+    CEdit compilerDefines_;
+    CEdit linkerLibs_;
+    CEdit sourcesInclude_;
+    CEdit sourcesSource_;
+    CEdit sourcesExclude_;
+    CEdit sourcesExternal_;
+    CButton compilerExceptions_;
+    CButton compilerParallel_;
+    CButton compilerBuffer_;
+    CButton linkerAslr_;
+    CButton linkerDep_;
+    CButton linkerLto_;
+
+    int currentPage_ = 0;
+    static constexpr int kMargin = 10;
+    static constexpr int kCtrlHeight = 24;
+    static constexpr int kLabelWidth = 120;
+};
+
+} // namespace vcbuild::gui

@@ -1,0 +1,32 @@
+{
+  "$comment": "vcbuild configuration - https://github.com/user/vcbuild",
+  
+  "project": {
+    "name": "MyProject",
+    "type": "exe",
+    "output_dir": "build",
+    "architecture": "x64"
+  },
+  
+  "compiler": {
+    "standard": "c++20",
+    "runtime": "dynamic",
+    "defines": [],
+    "warnings": {
+      "level": 4,
+      "as_errors": false,
+      "disabled": []
+    }
+  },
+  
+  "linker": {
+    "libraries": [],
+    "subsystem": "console"
+  },
+  
+  "sources": {
+    "include_dirs": ["src", "include"],
+    "source_dirs": ["src"],
+    "exclude_patterns": []
+  }
+}

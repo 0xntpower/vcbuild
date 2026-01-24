@@ -1,0 +1,169 @@
+# =============================================================================
+# vcbuild - Project .gitignore
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.pyo
+*.pyd
+
+# -----------------------------------------------------------------------------
+# MSVC Build Artifacts (GUI)
+# -----------------------------------------------------------------------------
+*.obj
+*.ilk
+*.pdb
+*.idb
+*.exp
+*.res
+*.aps
+*.sbr
+*.bsc
+*.lib
+*.dll
+*.exe
+Debug/
+Release/
+x64/
+x86/
+ARM64/
+
+# -----------------------------------------------------------------------------
+# Visual Studio
+# -----------------------------------------------------------------------------
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.filters
+*.VC.db
+*.VC.opendb
+.vs/
+ipch/
+*.opensdf
+*.sdf
+*.cachefile
+*.psess
+*.vsp
+*.vspx
+
+# -----------------------------------------------------------------------------
+# vcbuild Generated
+# -----------------------------------------------------------------------------
+.vcbuild_cache.json
+build/
+
+# -----------------------------------------------------------------------------
+# macOS
+# -----------------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# -----------------------------------------------------------------------------
+# Windows
+# -----------------------------------------------------------------------------
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# -----------------------------------------------------------------------------
+# Linux
+# -----------------------------------------------------------------------------
+.directory
+.Trash-*
+*~
+
+# -----------------------------------------------------------------------------
+# Editors
+# -----------------------------------------------------------------------------
+*.swp
+*.swo
+*.swn
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+*.sublime-workspace
+*.sublime-project
+
+# -----------------------------------------------------------------------------
+# Development Tools & Extensions
+# -----------------------------------------------------------------------------
+.claude/
+.cursor/
+.cursorules
+.cursorignore
+.continue/
+.cody/
+.codeium/
+.tabnine/
+.tabnineignore
+.aider*
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v3/
+.windsurf/
+.bolt/
+.idx/
+.replit
+.sourcegraph/
+.codex/
+.copilot/
+.copilot-codereviews/
+.amazonq/
+.aws/amazonq/
+.gemini/
+.codesandbox/
+.devcontainer/
+.github/copilot-*
+CLAUDE.md
+AGENTS.md
+CONTEXT.md
+AI_CONTEXT.md
+.ai/
+.llm/
+.prompts/
+prompts/
+.chat/
+chat_history/
+
+# -----------------------------------------------------------------------------
+# Temporary & Cache Files
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.bak
+*.backup
+*.log
+*.cache
+.cache/
+tmp/
+temp/
+logs/

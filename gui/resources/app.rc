@@ -3,6 +3,9 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
+// Application manifest for visual styles and DPI awareness
+1 RT_MANIFEST "app.manifest"
+
 VS_VERSION_INFO VERSIONINFO
     FILEVERSION 1,0,0,0
     PRODUCTVERSION 1,0,0,0

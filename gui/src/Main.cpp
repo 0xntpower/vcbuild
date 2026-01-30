@@ -11,6 +11,11 @@
 #include <shellapi.h>
 #include <filesystem>
 
+// Enable visual styles (ComCtl32 v6) for modern themed controls
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
 CAppModule _Module;
 
 #include "MainWindow.hpp"
@@ -41,10 +46,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdSh
             return 1;
         }
 
+        // Message loop with IsDialogMessage for proper keyboard navigation
+        // (Tab, Shift+Tab, Enter, Escape, arrow keys in groups)
         MSG msg;
         while (GetMessage(&msg, nullptr, 0, 0) > 0) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            if (!IsDialogMessage(wnd, &msg)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
         }
     }
 

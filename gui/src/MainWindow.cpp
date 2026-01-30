@@ -42,13 +42,13 @@ bool MainWindow::Initialize(const std::filesystem::path& configPath) {
         return false;
     }
 
-    // Larger window for better layout
-    RECT rc = {0, 0, 620, 520};
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+    // Compact window size - reduced height to eliminate empty space
+    // Use fixed-size window style (no resize, no maximize)
+    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN;
+    RECT rc = {0, 0, 560, 380};
+    AdjustWindowRect(&rc, style, FALSE);
 
-    Create(nullptr, rc, L"vcbuild Configuration Editor",
-           WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-           WS_EX_APPWINDOW);
+    Create(nullptr, rc, L"vcbuild Configuration", style, WS_EX_APPWINDOW);
 
     if (!m_hWnd) return false;
 
@@ -67,8 +67,8 @@ int MainWindow::OnCreate(LPCREATESTRUCT) {
 }
 
 void MainWindow::CreateControls() {
-    // Modern font - slightly larger for better readability
-    HFONT hFont = CreateFont(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    // Modern font for better readability
+    HFONT hFont = CreateFont(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                              DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
@@ -78,32 +78,32 @@ void MainWindow::CreateControls() {
     int w = rc.Width();
     int h = rc.Height();
 
-    // Create tab control with modern styling
-    tabCtrl_.Create(m_hWnd, RC(kMargin, kMargin, w - kMargin, h - 60),
-                    nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | TCS_TABS,
+    // Tab control fills most of the window
+    tabCtrl_.Create(m_hWnd, RC(kMargin, kMargin, w - kMargin, h - 50),
+                    nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_TABSTOP | TCS_TABS,
                     0, IDC_TAB);
     tabCtrl_.SetFont(hFont);
 
-    tabCtrl_.InsertItem(0, L"  Project  ");
-    tabCtrl_.InsertItem(1, L"  Compiler  ");
-    tabCtrl_.InsertItem(2, L"  Linker  ");
-    tabCtrl_.InsertItem(3, L"  Sources  ");
+    tabCtrl_.InsertItem(0, L" Project ");
+    tabCtrl_.InsertItem(1, L" Compiler ");
+    tabCtrl_.InsertItem(2, L" Linker ");
+    tabCtrl_.InsertItem(3, L" Sources ");
 
-    // Buttons at the bottom right - clean text without emojis
-    int btnWidth = 90;
-    int btnHeight = 28;
-    int btnY = h - 45;
-    int btnSpacing = 10;
+    // Buttons at the bottom right - standard Windows button size (75x23)
+    int btnWidth = 75;
+    int btnHeight = 23;
+    int btnY = h - 35;
+    int btnSpacing = 6;
 
     saveBtn_.Create(m_hWnd, RC(w - 2 * btnWidth - btnSpacing - kMargin, btnY,
                                w - btnWidth - btnSpacing - kMargin, btnY + btnHeight),
-                    L"Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_DEFPUSHBUTTON,
+                    L"Save", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_DEFPUSHBUTTON,
                     0, IDC_SAVE);
     saveBtn_.SetFont(hFont);
 
     reloadBtn_.Create(m_hWnd, RC(w - btnWidth - kMargin, btnY,
                                  w - kMargin, btnY + btnHeight),
-                      L"Reload", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                      L"Reload", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                       0, IDC_RELOAD);
     reloadBtn_.SetFont(hFont);
 
@@ -114,45 +114,45 @@ void MainWindow::CreateControls() {
 }
 
 void MainWindow::CreateProjectPage() {
-    HFONT hFont = CreateFont(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    HFONT hFont = CreateFont(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                              DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    int groupX = kMargin + 8;
-    int groupW = 584;
-    int x = groupX + 15;
-    int y = 60;
-    int ctrlX = x + kLabelWidth + 30;
-    int ctrlW = groupW - kLabelWidth - 60;
-    int rowSpacing = 36;
+    int groupX = kMargin + 6;
+    int groupW = 520;
+    int x = groupX + 12;
+    int y = 50;
+    int ctrlX = x + kLabelWidth + 10;
+    int ctrlW = groupW - kLabelWidth - 36;
+    int rowSpacing = 28;
 
     // Group box for project settings
     HWND groupBox = CreateWindow(L"BUTTON", L"Project Configuration",
                                   WS_CHILD | BS_GROUPBOX,
-                                  groupX, 40, groupW, 190,
+                                  groupX, 35, groupW, 135,
                                   m_hWnd, nullptr, nullptr, nullptr);
     SendMessage(groupBox, WM_SETFONT, (WPARAM)hFont, TRUE);
     projectCtrls_.push_back(groupBox);
 
     auto label = [&](const wchar_t* text) {
         HWND h = CreateWindow(L"STATIC", text, WS_CHILD | SS_LEFT,
-                              x, y + 4, kLabelWidth + 20, kCtrlHeight,
+                              x, y + 3, kLabelWidth, kCtrlHeight,
                               m_hWnd, nullptr, nullptr, nullptr);
         SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
         projectCtrls_.push_back(h);
     };
 
     label(L"Project Name:");
-    projectName_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                        nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    projectName_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                        nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     projectName_.SetFont(hFont);
     projectCtrls_.push_back(projectName_);
     y += rowSpacing;
 
     label(L"Output Type:");
-    projectType_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 140),
-                        nullptr, WS_CHILD | CBS_DROPDOWNLIST);
+    projectType_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 120),
+                        nullptr, WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST);
     projectType_.SetFont(hFont);
     projectType_.AddString(L"Executable (exe)");
     projectType_.AddString(L"Dynamic Library (dll)");
@@ -161,8 +161,8 @@ void MainWindow::CreateProjectPage() {
     y += rowSpacing;
 
     label(L"Architecture:");
-    projectArch_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 140),
-                        nullptr, WS_CHILD | CBS_DROPDOWNLIST);
+    projectArch_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 120),
+                        nullptr, WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST);
     projectArch_.SetFont(hFont);
     projectArch_.AddString(L"x64 (64-bit)");
     projectArch_.AddString(L"x86 (32-bit)");
@@ -171,19 +171,19 @@ void MainWindow::CreateProjectPage() {
     y += rowSpacing;
 
     label(L"Output Directory:");
-    projectOutDir_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                          nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    projectOutDir_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                          nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     projectOutDir_.SetFont(hFont);
     projectCtrls_.push_back(projectOutDir_);
 
-    // Add descriptive text below group box
-    y = 240;
+    // Help text below group box
+    y = 178;
     HWND desc = CreateWindow(L"STATIC",
                              L"Configure basic project settings and output parameters.",
                              WS_CHILD | SS_LEFT,
-                             x, y, groupW - 30, 20,
+                             x, y, groupW - 20, 18,
                              m_hWnd, nullptr, nullptr, nullptr);
-    HFONT smallFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, TRUE, FALSE, FALSE,
+    HFONT smallFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                                  CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                                  DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
@@ -192,38 +192,38 @@ void MainWindow::CreateProjectPage() {
 }
 
 void MainWindow::CreateCompilerPage() {
-    HFONT hFont = CreateFont(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    HFONT hFont = CreateFont(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                              DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    int groupX = kMargin + 8;
-    int groupW = 584;
-    int x = groupX + 15;
-    int y = 60;
-    int ctrlX = x + kLabelWidth + 30;
-    int ctrlW = groupW - kLabelWidth - 60;
-    int rowSpacing = 36;
+    int groupX = kMargin + 6;
+    int groupW = 520;
+    int x = groupX + 12;
+    int y = 50;
+    int ctrlX = x + kLabelWidth + 10;
+    int ctrlW = groupW - kLabelWidth - 36;
+    int rowSpacing = 28;
 
     // Group box for language & runtime settings
     HWND groupBox1 = CreateWindow(L"BUTTON", L"Language && Runtime",
                                    WS_CHILD | BS_GROUPBOX,
-                                   groupX, 40, groupW, 145,
+                                   groupX, 35, groupW, 107,
                                    m_hWnd, nullptr, nullptr, nullptr);
     SendMessage(groupBox1, WM_SETFONT, (WPARAM)hFont, TRUE);
     compilerCtrls_.push_back(groupBox1);
 
     auto label = [&](const wchar_t* text) {
         HWND h = CreateWindow(L"STATIC", text, WS_CHILD | SS_LEFT,
-                              x, y + 4, kLabelWidth + 20, kCtrlHeight,
+                              x, y + 3, kLabelWidth, kCtrlHeight,
                               m_hWnd, nullptr, nullptr, nullptr);
         SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
         compilerCtrls_.push_back(h);
     };
 
     label(L"C++ Standard:");
-    compilerStd_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 140),
-                        nullptr, WS_CHILD | CBS_DROPDOWNLIST);
+    compilerStd_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 120),
+                        nullptr, WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST);
     compilerStd_.SetFont(hFont);
     compilerStd_.AddString(L"C++17");
     compilerStd_.AddString(L"C++20 (Default)");
@@ -233,8 +233,8 @@ void MainWindow::CreateCompilerPage() {
     y += rowSpacing;
 
     label(L"Runtime Library:");
-    compilerRuntime_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 140),
-                            nullptr, WS_CHILD | CBS_DROPDOWNLIST);
+    compilerRuntime_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 120),
+                            nullptr, WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST);
     compilerRuntime_.SetFont(hFont);
     compilerRuntime_.AddString(L"Dynamic (DLL)");
     compilerRuntime_.AddString(L"Static");
@@ -242,81 +242,81 @@ void MainWindow::CreateCompilerPage() {
     y += rowSpacing;
 
     label(L"Preprocessor:");
-    compilerDefines_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                            nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    compilerDefines_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                            nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     compilerDefines_.SetFont(hFont);
     compilerCtrls_.push_back(compilerDefines_);
 
     // Group box for compiler options
-    int group2Y = 195;
-    y = group2Y + 25;
+    int group2Y = 148;
+    y = group2Y + 20;
     HWND groupBox2 = CreateWindow(L"BUTTON", L"Compiler Options",
                                    WS_CHILD | BS_GROUPBOX,
-                                   groupX, group2Y, groupW, 100,
+                                   groupX, group2Y, groupW, 68,
                                    m_hWnd, nullptr, nullptr, nullptr);
     SendMessage(groupBox2, WM_SETFONT, (WPARAM)hFont, TRUE);
     compilerCtrls_.push_back(groupBox2);
 
     int checkCol1 = x;
-    int checkCol2 = x + 220;
+    int checkCol2 = x + 175;
+    int checkCol3 = x + 330;
 
-    compilerExceptions_.Create(m_hWnd, RC(checkCol1, y, checkCol1 + 200, y + 24),
-                               L"Enable C++ Exceptions", WS_CHILD | BS_AUTOCHECKBOX);
+    compilerExceptions_.Create(m_hWnd, RC(checkCol1, y, checkCol1 + 160, y + 20),
+                               L"C++ Exceptions", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX);
     compilerExceptions_.SetFont(hFont);
     compilerCtrls_.push_back(compilerExceptions_);
 
-    compilerParallel_.Create(m_hWnd, RC(checkCol2, y, checkCol2 + 200, y + 24),
-                             L"Parallel Build (/MP)", WS_CHILD | BS_AUTOCHECKBOX);
+    compilerParallel_.Create(m_hWnd, RC(checkCol2, y, checkCol2 + 145, y + 20),
+                             L"Parallel Build (/MP)", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX);
     compilerParallel_.SetFont(hFont);
     compilerCtrls_.push_back(compilerParallel_);
-    y += 32;
 
-    compilerBuffer_.Create(m_hWnd, RC(checkCol1, y, checkCol1 + 230, y + 24),
-                           L"Buffer Security Checks (/GS)", WS_CHILD | BS_AUTOCHECKBOX);
+    compilerBuffer_.Create(m_hWnd, RC(checkCol3, y, checkCol3 + 170, y + 20),
+                           L"Security Checks (/GS)", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX);
     compilerBuffer_.SetFont(hFont);
     compilerCtrls_.push_back(compilerBuffer_);
 }
 
 void MainWindow::CreateLinkerPage() {
-    HFONT hFont = CreateFont(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    HFONT hFont = CreateFont(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                              DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    int groupX = kMargin + 8;
-    int groupW = 584;
-    int x = groupX + 15;
-    int y = 60;
-    int ctrlX = x + kLabelWidth + 30;
-    int ctrlW = groupW - kLabelWidth - 60;
-    int rowSpacing = 36;
+    int groupX = kMargin + 6;
+    int groupW = 520;
+    int x = groupX + 12;
+    int y = 50;
+    int ctrlX = x + kLabelWidth + 10;
+    int ctrlW = groupW - kLabelWidth - 36;
+    int rowSpacing = 28;
 
     // Group box for output & libraries
     HWND groupBox1 = CreateWindow(L"BUTTON", L"Output && Libraries",
                                    WS_CHILD | BS_GROUPBOX,
-                                   groupX, 40, groupW, 110,
+                                   groupX, 35, groupW, 78,
                                    m_hWnd, nullptr, nullptr, nullptr);
     SendMessage(groupBox1, WM_SETFONT, (WPARAM)hFont, TRUE);
     linkerCtrls_.push_back(groupBox1);
 
     auto label = [&](const wchar_t* text) {
         HWND h = CreateWindow(L"STATIC", text, WS_CHILD | SS_LEFT,
-                              x, y + 4, kLabelWidth + 20, kCtrlHeight,
+                              x, y + 3, kLabelWidth, kCtrlHeight,
                               m_hWnd, nullptr, nullptr, nullptr);
         SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
         linkerCtrls_.push_back(h);
     };
 
     label(L"Link Libraries:");
-    linkerLibs_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                       nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    linkerLibs_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                       nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     linkerLibs_.SetFont(hFont);
     linkerCtrls_.push_back(linkerLibs_);
     y += rowSpacing;
 
     label(L"Subsystem:");
-    linkerSubsystem_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 140),
-                            nullptr, WS_CHILD | CBS_DROPDOWNLIST);
+    linkerSubsystem_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 120),
+                            nullptr, WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST);
     linkerSubsystem_.SetFont(hFont);
     linkerSubsystem_.AddString(L"Console Application");
     linkerSubsystem_.AddString(L"Windows GUI");
@@ -324,100 +324,100 @@ void MainWindow::CreateLinkerPage() {
     linkerCtrls_.push_back(linkerSubsystem_);
 
     // Group box for security & optimization
-    int group2Y = 160;
-    y = group2Y + 25;
+    int group2Y = 118;
+    y = group2Y + 20;
     HWND groupBox2 = CreateWindow(L"BUTTON", L"Security && Optimization",
                                    WS_CHILD | BS_GROUPBOX,
-                                   groupX, group2Y, groupW, 100,
+                                   groupX, group2Y, groupW, 68,
                                    m_hWnd, nullptr, nullptr, nullptr);
     SendMessage(groupBox2, WM_SETFONT, (WPARAM)hFont, TRUE);
     linkerCtrls_.push_back(groupBox2);
 
     int checkCol1 = x;
-    int checkCol2 = x + 230;
+    int checkCol2 = x + 175;
+    int checkCol3 = x + 330;
 
-    linkerAslr_.Create(m_hWnd, RC(checkCol1, y, checkCol1 + 215, y + 24),
-                       L"ASLR (Address Randomization)", WS_CHILD | BS_AUTOCHECKBOX);
+    linkerAslr_.Create(m_hWnd, RC(checkCol1, y, checkCol1 + 165, y + 20),
+                       L"ASLR (Randomization)", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX);
     linkerAslr_.SetFont(hFont);
     linkerCtrls_.push_back(linkerAslr_);
 
-    linkerDep_.Create(m_hWnd, RC(checkCol2, y, checkCol2 + 230, y + 24),
-                      L"DEP (Data Execution Prevention)", WS_CHILD | BS_AUTOCHECKBOX);
+    linkerDep_.Create(m_hWnd, RC(checkCol2, y, checkCol2 + 145, y + 20),
+                      L"DEP (No-Execute)", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX);
     linkerDep_.SetFont(hFont);
     linkerCtrls_.push_back(linkerDep_);
-    y += 32;
 
-    linkerLto_.Create(m_hWnd, RC(checkCol1, y, checkCol1 + 250, y + 24),
-                      L"Link-Time Code Generation (/LTCG)", WS_CHILD | BS_AUTOCHECKBOX);
+    linkerLto_.Create(m_hWnd, RC(checkCol3, y, checkCol3 + 170, y + 20),
+                      L"Link-Time Codegen", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX);
     linkerLto_.SetFont(hFont);
     linkerCtrls_.push_back(linkerLto_);
 }
 
 void MainWindow::CreateSourcesPage() {
-    HFONT hFont = CreateFont(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    HFONT hFont = CreateFont(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                              DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
-    int groupX = kMargin + 8;
-    int groupW = 584;
-    int x = groupX + 15;
-    int y = 60;
-    int ctrlX = x + kLabelWidth + 30;
-    int ctrlW = groupW - kLabelWidth - 60;
-    int rowSpacing = 36;
+    int groupX = kMargin + 6;
+    int groupW = 520;
+    int x = groupX + 12;
+    int y = 50;
+    int ctrlX = x + kLabelWidth + 10;
+    int ctrlW = groupW - kLabelWidth - 36;
+    int rowSpacing = 28;
 
     // Group box for source paths
     HWND groupBox = CreateWindow(L"BUTTON", L"Source && Include Directories",
                                   WS_CHILD | BS_GROUPBOX,
-                                  groupX, 40, groupW, 190,
+                                  groupX, 35, groupW, 135,
                                   m_hWnd, nullptr, nullptr, nullptr);
     SendMessage(groupBox, WM_SETFONT, (WPARAM)hFont, TRUE);
     sourcesCtrls_.push_back(groupBox);
 
     auto label = [&](const wchar_t* text) {
         HWND h = CreateWindow(L"STATIC", text, WS_CHILD | SS_LEFT,
-                              x, y + 4, kLabelWidth + 20, kCtrlHeight,
+                              x, y + 3, kLabelWidth, kCtrlHeight,
                               m_hWnd, nullptr, nullptr, nullptr);
         SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
         sourcesCtrls_.push_back(h);
     };
 
     label(L"Include Directories:");
-    sourcesInclude_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                           nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    sourcesInclude_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                           nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     sourcesInclude_.SetFont(hFont);
     sourcesCtrls_.push_back(sourcesInclude_);
     y += rowSpacing;
 
     label(L"Source Directories:");
-    sourcesSource_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                          nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    sourcesSource_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                          nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     sourcesSource_.SetFont(hFont);
     sourcesCtrls_.push_back(sourcesSource_);
     y += rowSpacing;
 
     label(L"Exclude Patterns:");
-    sourcesExclude_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                           nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    sourcesExclude_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                           nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     sourcesExclude_.SetFont(hFont);
     sourcesCtrls_.push_back(sourcesExclude_);
     y += rowSpacing;
 
     label(L"External Directories:");
-    sourcesExternal_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + kCtrlHeight),
-                            nullptr, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | WS_EX_CLIENTEDGE);
+    sourcesExternal_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                            nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
     sourcesExternal_.SetFont(hFont);
     sourcesCtrls_.push_back(sourcesExternal_);
 
-    // Add help text below group box
-    y = 240;
+    // Help text below group box
+    y = 178;
     HWND desc = CreateWindow(L"STATIC",
                              L"Tip: Separate multiple paths with commas (,)",
                              WS_CHILD | SS_LEFT,
-                             x, y, groupW - 30, 20,
+                             x, y, groupW - 20, 18,
                              m_hWnd, nullptr, nullptr, nullptr);
-    HFONT smallFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, TRUE, FALSE, FALSE,
+    HFONT smallFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                                  CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                                  DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
@@ -544,13 +544,13 @@ void MainWindow::OnSize(UINT, CSize size) {
 
     int w = size.cx;
     int h = size.cy;
-    int btnWidth = 90;
-    int btnHeight = 28;
-    int btnSpacing = 10;
+    int btnWidth = 75;
+    int btnHeight = 23;
+    int btnSpacing = 6;
 
-    tabCtrl_.MoveWindow(kMargin, kMargin, w - 2 * kMargin, h - 60);
-    saveBtn_.MoveWindow(w - 2 * btnWidth - btnSpacing - kMargin, h - 45, btnWidth, btnHeight);
-    reloadBtn_.MoveWindow(w - btnWidth - kMargin, h - 45, btnWidth, btnHeight);
+    tabCtrl_.MoveWindow(kMargin, kMargin, w - 2 * kMargin, h - 50);
+    saveBtn_.MoveWindow(w - 2 * btnWidth - btnSpacing - kMargin, h - 35, btnWidth, btnHeight);
+    reloadBtn_.MoveWindow(w - btnWidth - kMargin, h - 35, btnWidth, btnHeight);
 }
 
 void MainWindow::OnDestroy() {

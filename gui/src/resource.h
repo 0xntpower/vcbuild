@@ -10,7 +10,6 @@
 
 #define IDC_TAB                 1001
 #define IDC_SAVE                1002
-#define IDC_RELOAD              1003
 
 #define IDC_PROJECT_NAME        2001
 #define IDC_PROJECT_TYPE        2002

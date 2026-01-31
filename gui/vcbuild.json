@@ -1,0 +1,52 @@
+{
+  "project": {
+    "name": "vcbuild_gui",
+    "type": "exe",
+    "output_dir": "build",
+    "architecture": "x64"
+  },
+  "compiler": {
+    "standard": "c++20",
+    "runtime": "dynamic",
+    "warnings": {
+      "level": 4,
+      "as_errors": false
+    },
+    "exceptions": true,
+    "parallel": true
+  },
+  "linker": {
+    "libraries": [
+      "user32.lib",
+      "gdi32.lib",
+      "comctl32.lib",
+      "shell32.lib",
+      "ole32.lib"
+    ],
+    "subsystem": "windows",
+    "security": {
+      "aslr": true,
+      "dep": true
+    }
+  },
+  "sources": {
+    "include_dirs": ["src", "external/Include"],
+    "source_dirs": ["src"]
+  },
+  "resources": {
+    "enabled": true,
+    "files": ["resources/app.rc"]
+  },
+  "profiles": {
+    "debug": {
+      "compiler": {
+        "defines": ["_DEBUG", "_UNICODE", "UNICODE"]
+      }
+    },
+    "release": {
+      "compiler": {
+        "defines": ["NDEBUG", "_UNICODE", "UNICODE"]
+      }
+    }
+  }
+}

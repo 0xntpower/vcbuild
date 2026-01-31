@@ -34,7 +34,6 @@ public:
         MSG_WM_DESTROY(OnDestroy)
         MSG_WM_CLOSE(OnClose)
         COMMAND_ID_HANDLER_EX(IDC_SAVE, OnSave)
-        COMMAND_ID_HANDLER_EX(IDC_RELOAD, OnReload)
         NOTIFY_CODE_HANDLER_EX(TCN_SELCHANGE, OnTabChange)
     END_MSG_MAP()
 
@@ -46,7 +45,6 @@ private:
     void OnDestroy();
     void OnClose();
     void OnSave(UINT code, int id, HWND hwnd);
-    void OnReload(UINT code, int id, HWND hwnd);
     LRESULT OnTabChange(LPNMHDR nmhdr);
 
     void CreateControls();
@@ -54,6 +52,7 @@ private:
     void CreateCompilerPage();
     void CreateLinkerPage();
     void CreateSourcesPage();
+    void CreateResourcesPage();
     void ShowPage(int index);
     void LoadConfigToUI();
     void SaveUIToConfig();
@@ -63,12 +62,12 @@ private:
     
     CTabCtrl tabCtrl_;
     CButton saveBtn_;
-    CButton reloadBtn_;
     
     std::vector<HWND> projectCtrls_;
     std::vector<HWND> compilerCtrls_;
     std::vector<HWND> linkerCtrls_;
     std::vector<HWND> sourcesCtrls_;
+    std::vector<HWND> resourcesCtrls_;
     
     CComboBox projectType_;
     CComboBox projectArch_;
@@ -89,6 +88,8 @@ private:
     CButton linkerAslr_;
     CButton linkerDep_;
     CButton linkerLto_;
+    CButton resourcesEnabled_;
+    CEdit resourcesFiles_;
 
     int currentPage_ = 0;
     static constexpr int kMargin = 10;

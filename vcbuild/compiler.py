@@ -174,17 +174,73 @@ def build_command(config: Config, sources: SourceSet, profile: str) -> tuple[str
     
     return cl_cmd, output_path
 
-def build(config: Config, sources: SourceSet, profile: str, 
+def compile_resources(config: Config, vcvars: Path, arch: str,
+                      verbose: bool = False) -> Path | None:
+    """Compile .rc files to .res if resources are configured."""
+    res_cfg = config.data.get("resources", {})
+    if not res_cfg.get("enabled", False):
+        return None
+
+    files = res_cfg.get("files", [])
+    if not files:
+        return None
+
+    # For now, support single resource file
+    rc_file = config.project_root / files[0]
+    if not rc_file.exists():
+        output.error(f"Resource file not found: {rc_file}")
+        return None
+
+    output_dir = config.project_root / config.data.get("project", {}).get("output_dir", "build")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    res_file = output_dir / (rc_file.stem + ".res")
+
+    # Build include paths for rc.exe
+    inc_dirs = config.data.get("sources", {}).get("include_dirs", [])
+    inc_flags = " ".join(f'/i"{config.project_root / d}"' for d in inc_dirs)
+
+    rc_cmd = f'rc /nologo {inc_flags} /fo"{res_file}" "{rc_file}"'
+    full_cmd = f'"{vcvars}" {arch} >nul 2>&1 && {rc_cmd}'
+
+    if verbose:
+        output.detail(f"Compiling resources: {rc_file.name}")
+
+    result = subprocess.run(full_cmd, shell=True, capture_output=True, text=True)
+
+    if result.returncode != 0 or not res_file.exists():
+        output.error("Resource compilation failed")
+        if result.stderr:
+            output.detail(result.stderr.strip())
+        return None
+
+    return res_file
+
+def build(config: Config, sources: SourceSet, profile: str,
           verbose: bool = False, dry_run: bool = False) -> BuildResult:
-    
+
     vcvars = find_vcvars()
     if vcvars is None:
         output.error("MSVC not found", "Install Visual Studio with C++ workload")
         return BuildResult(False, None, ["MSVC not found"], [])
-    
+
     arch = config.data.get("project", {}).get("architecture", "x64")
+
+    # Compile resources if configured
+    res_file = None
+    if not dry_run:
+        res_file = compile_resources(config, vcvars, arch, verbose)
+        if config.data.get("resources", {}).get("enabled", False) and res_file is None:
+            return BuildResult(False, None, ["Resource compilation failed"], [])
+
+    # Add resource file to linker flags if compiled
+    if res_file:
+        config.data.setdefault("linker", {}).setdefault("additional_flags", [])
+        res_flag = str(res_file)
+        if res_flag not in config.data["linker"]["additional_flags"]:
+            config.data["linker"]["additional_flags"].append(res_flag)
+
     cl_cmd, output_path = build_command(config, sources, profile)
-    
+
     full_cmd = f'"{vcvars}" {arch} >nul 2>&1 && {cl_cmd}'
     
     if dry_run:

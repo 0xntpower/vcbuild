@@ -44,6 +44,11 @@ struct SourcesConfig {
     std::vector<std::wstring> externalDirs;
 };
 
+struct ResourcesConfig {
+    bool enabled = false;
+    std::vector<std::wstring> files;
+};
+
 class ConfigManager {
 public:
     bool Load(const std::filesystem::path& path);
@@ -55,12 +60,14 @@ public:
     CompilerConfig& Compiler() { return compiler_; }
     LinkerConfig& Linker() { return linker_; }
     SourcesConfig& Sources() { return sources_; }
+    ResourcesConfig& Resources() { return resources_; }
 
 private:
     ProjectConfig project_;
     CompilerConfig compiler_;
     LinkerConfig linker_;
     SourcesConfig sources_;
+    ResourcesConfig resources_;
     bool modified_ = false;
 
     std::wstring EscapeJson(const std::wstring& s);
@@ -155,8 +162,13 @@ inline bool ConfigManager::Save(const std::filesystem::path& path) {
     file << L"    \"source_dirs\": " << VectorToJson(sources_.sourceDirs) << L",\n";
     file << L"    \"exclude_patterns\": " << VectorToJson(sources_.excludePatterns) << L",\n";
     file << L"    \"external_dirs\": " << VectorToJson(sources_.externalDirs) << L"\n";
+    file << L"  },\n";
+
+    file << L"  \"resources\": {\n";
+    file << L"    \"enabled\": " << (resources_.enabled ? L"true" : L"false") << L",\n";
+    file << L"    \"files\": " << VectorToJson(resources_.files) << L"\n";
     file << L"  }\n";
-    
+
     file << L"}\n";
     
     modified_ = false;

@@ -88,29 +88,24 @@ void MainWindow::CreateControls() {
     tabCtrl_.InsertItem(1, L" Compiler ");
     tabCtrl_.InsertItem(2, L" Linker ");
     tabCtrl_.InsertItem(3, L" Sources ");
+    tabCtrl_.InsertItem(4, L" Resources ");
 
-    // Buttons at the bottom right - standard Windows button size (75x23)
+    // Save button at the bottom right - standard Windows button size (75x23)
     int btnWidth = 75;
     int btnHeight = 23;
     int btnY = h - 35;
-    int btnSpacing = 6;
 
-    saveBtn_.Create(m_hWnd, RC(w - 2 * btnWidth - btnSpacing - kMargin, btnY,
-                               w - btnWidth - btnSpacing - kMargin, btnY + btnHeight),
+    saveBtn_.Create(m_hWnd, RC(w - btnWidth - kMargin, btnY,
+                               w - kMargin, btnY + btnHeight),
                     L"Save", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_DEFPUSHBUTTON,
                     0, IDC_SAVE);
     saveBtn_.SetFont(hFont);
-
-    reloadBtn_.Create(m_hWnd, RC(w - btnWidth - kMargin, btnY,
-                                 w - kMargin, btnY + btnHeight),
-                      L"Reload", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
-                      0, IDC_RELOAD);
-    reloadBtn_.SetFont(hFont);
 
     CreateProjectPage();
     CreateCompilerPage();
     CreateLinkerPage();
     CreateSourcesPage();
+    CreateResourcesPage();
 }
 
 void MainWindow::CreateProjectPage() {
@@ -425,6 +420,63 @@ void MainWindow::CreateSourcesPage() {
     sourcesCtrls_.push_back(desc);
 }
 
+void MainWindow::CreateResourcesPage() {
+    HFONT hFont = CreateFont(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                             CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+                             DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+
+    int groupX = kMargin + 6;
+    int groupW = 520;
+    int x = groupX + 12;
+    int y = 50;
+    int ctrlX = x + kLabelWidth + 10;
+    int ctrlW = groupW - kLabelWidth - 36;
+    int rowSpacing = 28;
+
+    // Group box for resource settings
+    HWND groupBox = CreateWindow(L"BUTTON", L"Resource Compilation",
+                                  WS_CHILD | BS_GROUPBOX,
+                                  groupX, 35, groupW, 107,
+                                  m_hWnd, nullptr, nullptr, nullptr);
+    SendMessage(groupBox, WM_SETFONT, (WPARAM)hFont, TRUE);
+    resourcesCtrls_.push_back(groupBox);
+
+    resourcesEnabled_.Create(m_hWnd, RC(x, y, x + 200, y + 20),
+                             L"Enable Resource Compilation", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX);
+    resourcesEnabled_.SetFont(hFont);
+    resourcesCtrls_.push_back(resourcesEnabled_);
+    y += rowSpacing;
+
+    auto label = [&](const wchar_t* text) {
+        HWND h = CreateWindow(L"STATIC", text, WS_CHILD | SS_LEFT,
+                              x, y + 3, kLabelWidth, kCtrlHeight,
+                              m_hWnd, nullptr, nullptr, nullptr);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        resourcesCtrls_.push_back(h);
+    };
+
+    label(L"Resource Files:");
+    resourcesFiles_.Create(m_hWnd, RC(ctrlX, y, ctrlX + ctrlW, y + 21),
+                           nullptr, WS_CHILD | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);
+    resourcesFiles_.SetFont(hFont);
+    resourcesCtrls_.push_back(resourcesFiles_);
+
+    // Help text below group box
+    y = 150;
+    HWND desc = CreateWindow(L"STATIC",
+                             L"Compile Windows resource files (.rc) containing icons, manifests, version info, etc.",
+                             WS_CHILD | SS_LEFT,
+                             x, y, groupW - 20, 36,
+                             m_hWnd, nullptr, nullptr, nullptr);
+    HFONT smallFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                                 CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+                                 DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+    SendMessage(desc, WM_SETFONT, (WPARAM)smallFont, TRUE);
+    resourcesCtrls_.push_back(desc);
+}
+
 void MainWindow::ShowPage(int index) {
     auto show = [](std::vector<HWND>& ctrls, bool visible) {
         int sw = visible ? SW_SHOW : SW_HIDE;
@@ -435,6 +487,7 @@ void MainWindow::ShowPage(int index) {
     show(compilerCtrls_, index == 1);
     show(linkerCtrls_, index == 2);
     show(sourcesCtrls_, index == 3);
+    show(resourcesCtrls_, index == 4);
     currentPage_ = index;
 }
 
@@ -443,6 +496,7 @@ void MainWindow::LoadConfigToUI() {
     auto& comp = config_.Compiler();
     auto& link = config_.Linker();
     auto& srcs = config_.Sources();
+    auto& res = config_.Resources();
 
     projectName_.SetWindowText(proj.name.c_str());
     
@@ -477,6 +531,9 @@ void MainWindow::LoadConfigToUI() {
 
     sourcesInclude_.SetWindowText(joinVec(srcs.includeDirs).c_str());
     sourcesSource_.SetWindowText(joinVec(srcs.sourceDirs).c_str());
+
+    resourcesEnabled_.SetCheck(res.enabled ? BST_CHECKED : BST_UNCHECKED);
+    resourcesFiles_.SetWindowText(joinVec(res.files).c_str());
 }
 
 void MainWindow::SaveUIToConfig() {
@@ -484,6 +541,7 @@ void MainWindow::SaveUIToConfig() {
     auto& comp = config_.Compiler();
     auto& link = config_.Linker();
     auto& srcs = config_.Sources();
+    auto& res = config_.Resources();
 
     wchar_t buf[512];
     
@@ -536,6 +594,26 @@ void MainWindow::SaveUIToConfig() {
     link.dep = linkerDep_.GetCheck() == BST_CHECKED;
     link.lto = linkerLto_.GetCheck() == BST_CHECKED;
 
+    res.enabled = resourcesEnabled_.GetCheck() == BST_CHECKED;
+
+    // Parse resource files (comma-separated)
+    resourcesFiles_.GetWindowText(buf, 512);
+    std::wstring resFilesStr = buf;
+    res.files.clear();
+    size_t start = 0;
+    while (start < resFilesStr.length()) {
+        size_t comma = resFilesStr.find(L',', start);
+        if (comma == std::wstring::npos) comma = resFilesStr.length();
+        std::wstring file = resFilesStr.substr(start, comma - start);
+        // Trim whitespace
+        size_t fstart = file.find_first_not_of(L" \t");
+        size_t fend = file.find_last_not_of(L" \t");
+        if (fstart != std::wstring::npos && fend != std::wstring::npos) {
+            res.files.push_back(file.substr(fstart, fend - fstart + 1));
+        }
+        start = comma + 1;
+    }
+
     config_.SetModified();
 }
 
@@ -546,11 +624,9 @@ void MainWindow::OnSize(UINT, CSize size) {
     int h = size.cy;
     int btnWidth = 75;
     int btnHeight = 23;
-    int btnSpacing = 6;
 
     tabCtrl_.MoveWindow(kMargin, kMargin, w - 2 * kMargin, h - 50);
-    saveBtn_.MoveWindow(w - 2 * btnWidth - btnSpacing - kMargin, h - 35, btnWidth, btnHeight);
-    reloadBtn_.MoveWindow(w - btnWidth - kMargin, h - 35, btnWidth, btnHeight);
+    saveBtn_.MoveWindow(w - btnWidth - kMargin, h - 35, btnWidth, btnHeight);
 }
 
 void MainWindow::OnDestroy() {
@@ -577,11 +653,6 @@ void MainWindow::OnSave(UINT, int, HWND) {
     } else {
         MessageBox(L"Failed to save", L"Error", MB_ICONERROR);
     }
-}
-
-void MainWindow::OnReload(UINT, int, HWND) {
-    config_.Load(configPath_);
-    LoadConfigToUI();
 }
 
 LRESULT MainWindow::OnTabChange(LPNMHDR) {

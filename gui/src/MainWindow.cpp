@@ -48,7 +48,7 @@ bool MainWindow::Initialize(const std::filesystem::path& configPath) {
     RECT rc = {0, 0, 560, 380};
     AdjustWindowRect(&rc, style, FALSE);
 
-    Create(nullptr, rc, L"vcbuild Configuration", style, WS_EX_APPWINDOW);
+    Create(nullptr, rc, L"vcbuild Config Generator", style, WS_EX_APPWINDOW);
 
     if (!m_hWnd) return false;
 

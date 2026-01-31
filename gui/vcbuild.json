@@ -1,6 +1,6 @@
 {
   "project": {
-    "name": "vcbuild_gui",
+    "name": "vcbuild_confgen",
     "type": "exe",
     "output_dir": "build",
     "architecture": "x64"

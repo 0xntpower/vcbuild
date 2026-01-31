@@ -1,6 +1,6 @@
 # vcbuild
 
-Lightweight command-line build system for Windows C++ projects using MSVC.
+A tool to break free from Visual Studio project files and bring Windows C++ development with MSVC directly into a VS Code–centric workflow, fitting naturally into multi-language projects.
 
 ## Requirements
 

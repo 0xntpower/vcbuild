@@ -92,7 +92,7 @@ build.bat
 Launch from your project directory:
 
 ```bash
-vcbuild/gui/build/vcbuild_gui.exe
+vcbuild/gui/build/vcbuild_confgen.exe
 ```
 
 Or via CLI:

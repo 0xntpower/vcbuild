@@ -8,6 +8,7 @@ A lightweight, MSVC-based command-line build system for Windows C++ projects.
 
 - Python 3.10+
 - Visual Studio 2019/2022 with C++ workload
+- Windows Driver Kit (WDK) for kernel driver builds
 
 ## Installation
 
@@ -75,8 +76,10 @@ Without configuration, vcbuild uses sensible defaults:
 - C++20 standard
 - x64 architecture
 - Warning level 4
+- Unicode character set
 - Security hardening (ASLR, DEP, /GS)
 - Strict conformance (/permissive-)
+- Function-level linking (/Gy), string pooling (/GF)
 - Release: Full optimization, LTO
 - Debug: No optimization, full debug info
 
@@ -108,7 +111,7 @@ python vcbuild/vcbuild.py --config-gui
 | `debug`/`release` | Build profile |
 | `-D NAME[=VAL]` | Add preprocessor define |
 | `--arch` | Target architecture (x86/x64/arm64) |
-| `--standard` | C++ standard (c++17/c++20/c++23) |
+| `--standard` | C/C++ standard (c11/c17/c++17/c++20/c++23) |
 | `-o NAME` | Output filename |
 | `--clean` | Remove build artifacts |
 | `--rebuild` | Clean and rebuild |
@@ -127,7 +130,7 @@ See [docs/flags_reference.md](docs/flags_reference.md) for MSVC flags documentat
 | Field | Values | Default |
 |-------|--------|---------|
 | `name` | string | folder name |
-| `type` | exe, dll, lib | exe |
+| `type` | exe, dll, lib, sys | exe |
 | `architecture` | x86, x64, arm64 | x64 |
 | `output_dir` | path | build |
 | `output_name` | string | {name}.{ext} |
@@ -136,12 +139,18 @@ See [docs/flags_reference.md](docs/flags_reference.md) for MSVC flags documentat
 
 | Field | Values | Default |
 |-------|--------|---------|
-| `standard` | c++17, c++20, c++23, c++latest | c++20 |
+| `standard` | c11, c17, c++17, c++20, c++23, c++latest | c++20 |
 | `runtime` | dynamic, static | dynamic |
 | `optimization` | auto, none, size, speed, full | auto |
 | `debug_info` | auto, none, minimal, full | auto |
 | `parallel` | bool | true |
 | `exceptions` | bool | true |
+| `rtti` | bool | true |
+| `floating_point` | precise, fast, strict | precise |
+| `calling_convention` | cdecl, stdcall, fastcall, vectorcall | cdecl |
+| `char_set` | unicode, mbcs, none | unicode |
+| `function_level_linking` | bool | true |
+| `string_pooling` | bool | true |
 | `defines` | string[] | [] |
 | `warnings.level` | 0-4 | 4 |
 | `warnings.as_errors` | bool | false |
@@ -155,11 +164,18 @@ See [docs/flags_reference.md](docs/flags_reference.md) for MSVC flags documentat
 |-------|--------|---------|
 | `libraries` | string[] | [] |
 | `library_paths` | string[] | [] |
-| `subsystem` | console, windows, native | console |
+| `subsystem` | console, windows, native, efi_application, boot_application, posix | console |
 | `lto` | auto, off, on | auto |
 | `strip_unreferenced` | auto, off, on | auto |
+| `entry_point` | string | null |
+| `def_file` | path | null |
+| `stack_size` | integer (bytes) | null |
+| `heap_size` | integer (bytes) | null |
+| `generate_map` | bool | false |
+| `generate_debug_info` | bool | true |
 | `security.aslr` | bool | true |
 | `security.dep` | bool | true |
+| `security.cfg` | bool | false |
 
 ### Sources
 
@@ -170,3 +186,71 @@ See [docs/flags_reference.md](docs/flags_reference.md) for MSVC flags documentat
 | `extensions` | [".cpp", ".cc", ".c", ".cxx"] |
 | `exclude_patterns` | [] |
 | `external_dirs` | [] |
+<<<<<<< Updated upstream
+=======
+
+### Precompiled Headers
+
+| Field | Default |
+|-------|---------|
+| `pch.enabled` | false |
+| `pch.header` | null |
+| `pch.source` | null |
+
+### Resources
+
+| Field | Default |
+|-------|---------|
+| `resources.enabled` | false |
+| `resources.files` | [] |
+
+### Kernel Driver
+
+For building Windows kernel drivers (.sys files). Requires WDK.
+
+| Field | Values | Default |
+|-------|--------|---------|
+| `driver.enabled` | bool | false |
+| `driver.type` | wdm, kmdf, wdf | wdm |
+| `driver.entry_point` | string | DriverEntry |
+| `driver.target_os` | win7, win8, win81, win10, win11 | win10 |
+| `driver.minifilter` | bool | false |
+
+Example kernel driver configuration:
+
+```json
+{
+  "project": {
+    "name": "MyDriver",
+    "type": "sys",
+    "architecture": "x64"
+  },
+  "compiler": {
+    "standard": "c++20",
+    "runtime": "static"
+  },
+  "driver": {
+    "enabled": true,
+    "type": "wdm",
+    "target_os": "win10"
+  }
+}
+```
+
+Example minifilter driver:
+
+```json
+{
+  "project": {
+    "name": "MyFilter",
+    "type": "sys"
+  },
+  "driver": {
+    "enabled": true,
+    "type": "wdm",
+    "minifilter": true,
+    "target_os": "win10"
+  }
+}
+```
+>>>>>>> Stashed changes

@@ -53,47 +53,82 @@ private:
     void CreateLinkerPage();
     void CreateSourcesPage();
     void CreateResourcesPage();
+    void CreateDriverPage();
     void ShowPage(int index);
     void LoadConfigToUI();
     void SaveUIToConfig();
+    void UpdateTitleBar();
 
     ConfigManager config_;
     std::filesystem::path configPath_;
-    
+    HFONT hFont_ = nullptr;
+    HFONT hSmallFont_ = nullptr;
+
     CTabCtrl tabCtrl_;
     CButton saveBtn_;
-    
+
     std::vector<HWND> projectCtrls_;
     std::vector<HWND> compilerCtrls_;
     std::vector<HWND> linkerCtrls_;
     std::vector<HWND> sourcesCtrls_;
     std::vector<HWND> resourcesCtrls_;
-    
+    std::vector<HWND> driverCtrls_;
+
+    // Project
     CComboBox projectType_;
     CComboBox projectArch_;
-    CComboBox compilerStd_;
-    CComboBox compilerRuntime_;
-    CComboBox linkerSubsystem_;
     CEdit projectName_;
     CEdit projectOutDir_;
+
+    // Compiler
+    CComboBox compilerStd_;
+    CComboBox compilerRuntime_;
+    CComboBox compilerFp_;
+    CComboBox compilerCallConv_;
+    CComboBox compilerCharSet_;
     CEdit compilerDefines_;
+    CButton compilerExceptions_;
+    CButton compilerParallel_;
+    CButton compilerBuffer_;
+    CButton compilerCfg_;
+    CButton compilerRtti_;
+    CButton compilerFuncLink_;
+    CButton compilerStrPool_;
+    CButton compilerWarnErr_;
+
+    // Linker
+    CComboBox linkerSubsystem_;
     CEdit linkerLibs_;
+    CEdit linkerLibPaths_;
+    CEdit linkerEntry_;
+    CEdit linkerDefFile_;
+    CButton linkerAslr_;
+    CButton linkerDep_;
+    CButton linkerLto_;
+    CButton linkerCfgLink_;
+    CButton linkerMap_;
+    CButton linkerDebugInfo_;
+
+    // Sources
     CEdit sourcesInclude_;
     CEdit sourcesSource_;
     CEdit sourcesExclude_;
     CEdit sourcesExternal_;
-    CButton compilerExceptions_;
-    CButton compilerParallel_;
-    CButton compilerBuffer_;
-    CButton linkerAslr_;
-    CButton linkerDep_;
-    CButton linkerLto_;
+
+    // Resources
     CButton resourcesEnabled_;
     CEdit resourcesFiles_;
 
+    // Driver
+    CButton driverEnabled_;
+    CComboBox driverType_;
+    CEdit driverEntry_;
+    CComboBox driverTargetOs_;
+    CButton driverMinifilter_;
+
     int currentPage_ = 0;
     static constexpr int kMargin = 10;
-    static constexpr int kCtrlHeight = 24;
+    static constexpr int kCtrlHeight = 22;
     static constexpr int kLabelWidth = 120;
 };
 

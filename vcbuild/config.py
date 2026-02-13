@@ -61,7 +61,7 @@ def load(project_root: Path, profile: str = "release") -> Config:
         config["project"]["name"] = project_root.name
     
     if config["project"]["output_name"] is None:
-        ext = {"exe": ".exe", "dll": ".dll", "lib": ".lib"}
+        ext = {"exe": ".exe", "dll": ".dll", "lib": ".lib", "sys": ".sys"}
         config["project"]["output_name"] = (
             config["project"]["name"] + ext.get(config["project"]["type"], ".exe")
         )

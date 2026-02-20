@@ -355,7 +355,9 @@ def build_command(config: Config, sources: SourceSet, profile: str) -> tuple[str
     for lib in link.get("libraries", []):
         link_flags.append(f"{lib}")
 
+    arch = proj.get("architecture", "x64")
     for lp in link.get("library_paths", []):
+        lp = lp.replace("${ARCH}", arch)
         link_flags.append(f'/LIBPATH:"{lp}"')
 
     link_flags.extend(link.get("additional_flags", []))

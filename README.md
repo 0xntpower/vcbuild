@@ -253,4 +253,3 @@ Example minifilter driver:
   }
 }
 ```
->>>>>>> Stashed changes
